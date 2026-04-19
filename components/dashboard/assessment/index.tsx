@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { motion } from "framer-motion";
 
-export const Assessment = () => {
+export const AssessmentWa = () => {
   const questions = [
     {
       question: "What does useEffect do in React?",

@@ -1,169 +1,107 @@
 "use client";
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Clock } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 
-export const Assessment = () => {
-  const questions = [
-    {
-      question: "What does useEffect do in React?",
-      options: [
-        "Handles side effects",
-        "Manages routing",
-        "Stores global state",
-        "Compiles JSX",
-      ],
-    },
-  ];
-
-  const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [time, setTime] = useState(8 * 60 + 21);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTime((t) => (t > 0 ? t - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = s % 60;
-    return `${m.toString().padStart(2, "0")}:${sec
-      .toString()
-      .padStart(2, "0")}`;
-  };
-
-  const getTimerColor = () => {
-    if (time < 60) return "text-red-500";
-    if (time < 180) return "text-yellow-500";
-    return "text-gray-800";
-  };
-
-  const q = questions[current];
-
+export const AssessmentIntro = () => {
   return (
-    <div className="relative min-h-screen flex items-start justify-center px-4 py-10 bg-gray-950 text-white overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 bg-gradient-to-br from-white via-gray-50 to-gray-100">
 
-      {/* 🔥 Background glow */}
+      {/* Soft radial glow */}
       <div className="absolute inset-0 flex justify-center pointer-events-none">
-        <div className="w-[600px] h-[600px] bg-indigo-500/20 blur-[120px] rounded-full" />
+        <div className="w-[500px] h-[500px] bg-indigo-500/10 blur-3xl rounded-full" />
       </div>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="relative w-full max-w-xl"
+      >
 
-      {/* 🔒 Main container */}
-      <div className="relative w-full max-w-3xl space-y-8">
+        <div className="rounded-2xl border border-gray-200 bg-white/80 backdrop-blur-xl shadow-none px-6 py-8 space-y-8 text-center">
 
-        {/* HEADER */}
-        <div className="flex items-center justify-between text-sm text-gray-400">
-          <span>
-            Question {current + 1} of {questions.length}
-          </span>
+          {/* TOP */}
+          <div className="space-y-2">
+            <p className="text-xs text-gray-500 uppercase tracking-wider">
+              Interview Simulation
+            </p>
 
-          {/* ⏱ Timer */}
-          <motion.div
-            key={time}
-            initial={{ scale: 1 }}
-            animate={{ scale: time < 60 ? [1, 1.05, 1] : 1 }}
-            transition={{ duration: 0.6 }}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur ${getTimerColor()}`}
-          >
-            <Clock className="h-4 w-4" />
-            {formatTime(time)}
-          </motion.div>
-        </div>
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-gray-900">
+              Fullstack Assessment
+            </h1>
 
-        {/* PROGRESS */}
-        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{
-              width: `${((current + 1) / questions.length) * 100}%`,
-            }}
-            transition={{ duration: 0.4 }}
-            className="h-full bg-gradient-to-r from-indigo-500 to-purple-500"
-          />
-        </div>
+            <p className="text-sm text-gray-600 max-w-md mx-auto">
+              You’re about to begin a timed technical assessment designed to simulate real interview conditions.
+            </p>
+          </div>
 
-        {/* QUESTION */}
-        <motion.h2
-          key={current}
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-2xl font-semibold tracking-tight text-white"
-        >
-          {q.question}
-        </motion.h2>
-
-        {/* OPTIONS */}
-        <div className="space-y-4">
-          {q.options.map((opt, i) => {
-            const isSelected = selected === opt;
-
-            return (
-              <motion.button
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              { label: "Questions", value: "15" },
+              {
+                label: "Duration",
+                value: (
+                  <span className="flex items-center justify-center gap-1">
+                    <Clock className="h-4 w-4" /> 10m
+                  </span>
+                ),
+              },
+              { label: "Grading", value: "Auto" },
+            ].map((item, i) => (
+              <div
                 key={i}
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setSelected(opt)}
-                className={`
-                  relative w-full text-left p-4 rounded-xl transition-all
-                  border backdrop-blur
-                  ${
-                    isSelected
-                      ? "border-indigo-500 bg-indigo-500/10 shadow-[0_0_0_1px_rgba(99,102,241,0.5)]"
-                      : "border-white/10 bg-white/5 hover:bg-white/10"
-                  }
-                `}
+                className="rounded-xl border border-gray-200 bg-gray-50 py-3"
               >
-                <span className="text-sm text-gray-200">{opt}</span>
+                <p className="text-lg font-semibold text-gray-900">
+                  {item.value}
+                </p>
+                <p className="text-xs text-gray-500">{item.label}</p>
+              </div>
+            ))}
+          </div>
 
-                {/* Glow on select */}
-                {isSelected && (
-                  <div className="absolute inset-0 rounded-xl bg-indigo-500/10 blur-md pointer-events-none" />
-                )}
-              </motion.button>
-            );
-          })}
+          {/* 📋 RULES */}
+          <div className="text-sm text-gray-600 space-y-3 max-w-md mx-auto">
+            <p className="font-medium text-gray-900">
+              Before you begin
+            </p>
+
+            <ul className="space-y-2 text-left">
+              <li>• The timer starts immediately and cannot be paused</li>
+              <li>• Answer all questions for accurate evaluation</li>
+              <li>• Designed to reflect real interview conditions</li>
+              <li>• Results are generated instantly after submission</li>
+            </ul>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+            You’ll receive a readiness score, performance insights, and clear next steps after completion.
+          </div>
+
+          <div className="space-y-3">
+            <Link href="/assessment/test">
+              <Button
+                size="lg"
+                className="group relative w-64 py-5 my-3 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md hover:shadow-lg transition-all"
+              >
+                <span className="relative z-10 flex items-center justify-center">
+                  Start Assessment
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </span>
+
+                {/* Glow */}
+                <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 blur-xl opacity-20 group-hover:opacity-40 transition" />
+              </Button>
+            </Link>
+
+            <p className="text-xs text-gray-400">
+              Make sure you’re ready before you begin
+            </p>
+          </div>
+
         </div>
-
-        {/* NAVIGATION */}
-        <div className="flex items-center justify-between pt-4">
-
-          <Button
-            variant="ghost"
-            className="text-gray-300 hover:text-white"
-            disabled={current === 0}
-            onClick={() => {
-              setCurrent((c) => Math.max(0, c - 1));
-              setSelected(null);
-            }}
-          >
-            Previous
-          </Button>
-
-          {current < questions.length - 1 ? (
-            <Button
-              disabled={!selected}
-              className="bg-white text-black hover:bg-gray-200"
-              onClick={() => {
-                setCurrent((c) => c + 1);
-                setSelected(null);
-              }}
-            >
-              Next
-            </Button>
-          ) : (
-            <Button
-              disabled={!selected}
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
-            >
-              Submit
-            </Button>
-          )}
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

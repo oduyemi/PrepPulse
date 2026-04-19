@@ -17,10 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { airtableFetch } from "@/lib/airtable";
 
-/* =========================
-   Header
-========================= */
+
 const Header = ({ title, subtitle }: { title: string; subtitle: string }) => {
   return (
     <div className="w-full max-w-sm mx-auto text-center">
@@ -32,9 +33,7 @@ const Header = ({ title, subtitle }: { title: string; subtitle: string }) => {
   );
 };
 
-/* =========================
-   Switch
-========================= */
+
 function SwitchAuth({
   mode,
   setMode,
@@ -58,9 +57,6 @@ function SwitchAuth({
   );
 }
 
-/* =========================
-   Field Wrapper (KEY FIX)
-========================= */
 const Field = ({
   label,
   children,
@@ -77,20 +73,87 @@ const Field = ({
 };
 
 export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
+  const { login } = useAuth();
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"register" | "login">("register");
   const [form, setForm] = useState<any>({});
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (name: string, value: string) => {
-    setForm({ ...form, [name]: value });
+    setForm((prev: any) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(mode === "register" ? "Register" : "Login", form);
+    setLoading(true);
+  
+    try {
+      if (mode === "register") {
+        await fetch("/api/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(form),
+        });
+  
+        // ✅ Auto login after register
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: form.email,
+            password: form.password,
+          }),
+        });
+  
+        const data = await res.json();
+  
+        if (!res.ok) {
+          alert(data.error);
+          return;
+        }
+  
+        login(data);
+        setForm({});
+        setOpen(false);
+        router.push("/track");
+        return;
+      }
+  
+      // ✅ LOGIN (clean version)
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (!res.ok) {
+        alert(data.error);
+        return;
+      }
+  
+      login(data);
+      setForm({});
+      setOpen(false);
+      router.push("/track");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
       <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-2xl border-0 shadow-2xl">
@@ -173,13 +236,13 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
                       <SelectValue placeholder=" Select your track" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="fullstack">
+                      <SelectItem value="Fullstack">
                         Fullstack Development
                       </SelectItem>
-                      <SelectItem value="hr">
+                      <SelectItem value="HR">
                         Human Resources
                       </SelectItem>
-                      <SelectItem value="pm">
+                      <SelectItem value="Project">
                         Project Management
                       </SelectItem>
                     </SelectContent>
@@ -196,11 +259,11 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
                       <SelectValue placeholder="Select your level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="entry">Entry</SelectItem>
-                      <SelectItem value="intermediate">
+                      <SelectItem value="Entry">Entry</SelectItem>
+                      <SelectItem value="Intermediate">
                         Intermediate
                       </SelectItem>
-                      <SelectItem value="senior">Senior</SelectItem>
+                      <SelectItem value="Senior">Senior</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -210,9 +273,14 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
             {/* CTA */}
             <Button
               type="submit"
+              disabled={loading}
               className="w-full h-11 py-5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md hover:opacity-90"
             >
-              {mode === "register" ? "Create Account" : "Login"}
+              {loading
+                ? "Please wait..."
+                : mode === "register"
+                ? "Create Account"
+                : "Login"}
             </Button>
           </form>
 

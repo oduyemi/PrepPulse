@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from "lucide-react";
 import { DashboardPreview } from "./DashboardPreview";
-import { AuthDialog } from "@/dialogs/auth-dialog";
+import { AuthDialog } from "@/dialogs/AuthDialog";
 
 export const Hero = () => {
   return (
