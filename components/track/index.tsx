@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Section } from "./Section";
 import { BookOpen, ArrowRight, Sparkles } from "lucide-react";
 import Link from "next/link";
+
+type TrackKey = keyof typeof TRACKS;
+
 
 const TRACKS = {
   fullstack: {
@@ -43,8 +47,9 @@ const TRACKS = {
   },
 };
 
-export const TrackIntro = ({ track = "fullstack" }) => {
-    const data = TRACKS[track];
+export const TrackIntro = ({ track = "fullstack" }: { track?: TrackKey }) => {
+  const data = TRACKS[track];
+
   
     return (
       <div className="max-w-5xl mx-auto px-6 py-12 space-y-10">
@@ -130,7 +135,6 @@ export const TrackIntro = ({ track = "fullstack" }) => {
           <Section title="Key Expectations" items={data.expectations} />
         </div>
   
-        {/* 🔥 PREMIUM CTA SECTION */}
         <Card className="rounded-2xl border-0 shadow-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
           <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-6">
   

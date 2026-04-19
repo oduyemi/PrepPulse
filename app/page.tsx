@@ -1,7 +1,3 @@
-import { Landing } from "@/components/home";
-import { CTA } from "@/components/home/CTA";
-import { DashboardPreview } from "@/components/home/DashboardPreview";
-import { FeatureGrid } from "@/components/home/Features";
 import { Hero } from "@/components/home/Hero";
 import { Process } from "@/components/home/Process";
 import { Value } from "@/components/home/Value";
