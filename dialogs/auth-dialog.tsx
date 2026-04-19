@@ -10,21 +10,31 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* =========================
-   Shared UI
+   Header
 ========================= */
-function Header({ title, subtitle }: { title: string; subtitle: string }) {
+const Header = ({ title, subtitle }: { title: string; subtitle: string }) => {
   return (
-    <div className="text-center space-y-2">
-      <DialogTitle className="text-2xl font-semibold tracking-tight">
+    <div className="w-full max-w-sm mx-auto text-center">
+      <DialogTitle className="text-xl sm:text-2xl font-semibold tracking-tight text-gray-900">
         {title}
       </DialogTitle>
-      <p className="text-sm text-gray-500">{subtitle}</p>
+      <p className="mt-1 text-sm text-gray-500">{subtitle}</p>
     </div>
   );
-}
+};
 
+/* =========================
+   Switch
+========================= */
 function SwitchAuth({
   mode,
   setMode,
@@ -33,7 +43,7 @@ function SwitchAuth({
   setMode: (m: "register" | "login") => void;
 }) {
   return (
-    <div className="flex items-center justify-center gap-2 text-sm">
+    <div className="flex items-center justify-center gap-1 text-sm">
       <span className="text-gray-500">
         {mode === "register" ? "Already have an account?" : "New here?"}
       </span>
@@ -49,14 +59,29 @@ function SwitchAuth({
 }
 
 /* =========================
-   Unified Auth Dialog
+   Field Wrapper (KEY FIX)
 ========================= */
-export function AuthDialog({ children }: { children: React.ReactNode }) {
+const Field = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs text-gray-600">{label}</Label>
+      {children}
+    </div>
+  );
+};
+
+export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
   const [mode, setMode] = useState<"register" | "login">("register");
   const [form, setForm] = useState<any>({});
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (name: string, value: string) => {
+    setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,11 +93,14 @@ export function AuthDialog({ children }: { children: React.ReactNode }) {
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
 
-      <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden border-0 shadow-2xl">
-        {/* Gradient top */}
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-2xl border-0 shadow-2xl">
+        
+        {/* Top gradient */}
         <div className="h-1.5 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600" />
 
-        <div className="p-6">
+        <div className="px-6 py-6">
+
+          {/* Header */}
           <DialogHeader>
             <Header
               title={mode === "register" ? "Create your account" : "Welcome back"}
@@ -84,66 +112,116 @@ export function AuthDialog({ children }: { children: React.ReactNode }) {
             />
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+
+            {/* NAME */}
             {mode === "register" && (
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">First Name</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="First Name">
                   <Input
-                    name="firstName"
-                    onChange={handleChange}
-                    className="rounded-xl mt-1 focus-visible:ring-indigo-500"
+                    onChange={(e) =>
+                      handleChange("firstName", e.target.value)
+                    }
+                    className="h-11 rounded-xl"
                     required
                   />
-                </div>
-                <div>
-                  <Label className="text-xs">Surname</Label>
+                </Field>
+
+                <Field label="Surname">
                   <Input
-                    name="surname"
-                    onChange={handleChange}
-                    className="rounded-xl mt-1 focus-visible:ring-indigo-500"
+                    onChange={(e) =>
+                      handleChange("surname", e.target.value)
+                    }
+                    className="h-11 rounded-xl"
                     required
                   />
-                </div>
+                </Field>
               </div>
             )}
 
-            <div>
-              <Label className="text-xs">Email</Label>
+            {/* EMAIL */}
+            <Field label="Email">
               <Input
                 type="email"
-                name="email"
-                onChange={handleChange}
-                className="rounded-xl mt-1 focus-visible:ring-indigo-500"
+                onChange={(e) => handleChange("email", e.target.value)}
+                className="h-11 rounded-xl"
                 required
               />
-            </div>
+            </Field>
 
-            <div>
-              <Label className="text-xs">Password</Label>
+            {/* PASSWORD */}
+            <Field label="Password">
               <Input
                 type="password"
-                name="password"
-                onChange={handleChange}
-                className="rounded-xl mt-1 focus-visible:ring-indigo-500"
+                onChange={(e) => handleChange("password", e.target.value)}
+                className="h-11 rounded-xl"
                 required
               />
-            </div>
+            </Field>
 
+            {/* REGISTER ONLY */}
+            {mode === "register" && (
+              <>
+                <Field label="Job Interest">
+                  <Select
+                    onValueChange={(val) =>
+                      handleChange("jobInterest", val)
+                    }
+                  >
+                    <SelectTrigger className="h-11 w-full rounded-xl">
+                      <SelectValue placeholder=" Select your track" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fullstack">
+                        Fullstack Development
+                      </SelectItem>
+                      <SelectItem value="hr">
+                        Human Resources
+                      </SelectItem>
+                      <SelectItem value="pm">
+                        Project Management
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+
+                <Field label="Skill Level">
+                  <Select
+                    onValueChange={(val) =>
+                      handleChange("skillLevel", val)
+                    }
+                  >
+                    <SelectTrigger className="h-11 w-full rounded-xl">
+                      <SelectValue placeholder="Select your level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entry">Entry</SelectItem>
+                      <SelectItem value="intermediate">
+                        Intermediate
+                      </SelectItem>
+                      <SelectItem value="senior">Senior</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
+              </>
+            )}
+
+            {/* CTA */}
             <Button
               type="submit"
-              className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:opacity-90 shadow-md transition-all"
+              className="w-full h-11 py-5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 shadow-md hover:opacity-90"
             >
               {mode === "register" ? "Create Account" : "Login"}
             </Button>
           </form>
 
           {/* Switch */}
-          <div className="mt-6">
+          <div className="mt-5">
             <SwitchAuth mode={mode} setMode={setMode} />
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
-}
+};

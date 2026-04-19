@@ -11,7 +11,7 @@ export default function DashboardLayout({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="bg-gray-50 flex">
 
       {/* Sidebar */}
       <Sidebar open={open} setOpen={setOpen} />
@@ -21,8 +21,6 @@ export default function DashboardLayout({
 
         {/* Header */}
         <Header toggleSidebar={() => setOpen(!open)} />
-
-        {/* 🔒 Content Wrapper (THIS is the key fix) */}
         <main className="flex-1 w-full">
           <div className="
             mx-auto 

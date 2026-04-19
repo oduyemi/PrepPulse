@@ -1,13 +1,8 @@
 "use client";
-import {
-  X,
-  LayoutDashboard,
-  BarChart3,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import { X, LayoutDashboard, BarChart3, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 export const Sidebar = ({
   open,
@@ -17,9 +12,11 @@ export const Sidebar = ({
   setOpen: (val: boolean) => void;
 }) => {
   const links = [
-    { icon: LayoutDashboard, label: "Overview", active: true },
-    { icon: BarChart3, label: "Analytics" },
-    { icon: Settings, label: "Settings" },
+    { icon: LayoutDashboard, label: "Overview", active: true }, // should link to /portal
+    { icon: BarChart3, label: "Assessment" }, // /portal/assessment
+    { icon: BarChart3, label: "Progress" }, // /portal/analytics
+    { icon: BarChart3, label: "Courses" }, // /courses
+    { icon: Settings, label: "Profile" }, // /protal/settings
   ];
 
   return (
@@ -85,13 +82,15 @@ export const Sidebar = ({
 
           {/* Footer */}
           <div className="pt-4 border-t border-gray-100">
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 text-sm text-gray-600 hover:text-gray-900"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </Button>
+            <Link href="/logout">
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-3 text-sm text-gray-600 hover:text-gray-900"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
+            </Link>
           </div>
         </div>
       </aside>
