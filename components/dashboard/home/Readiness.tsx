@@ -1,0 +1,120 @@
+"use client";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { motion, useMotionValue, useTransform } from "framer-motion";
+
+export const ReadinessCard = () => {
+  const score = 72;
+  const getColor = () => {
+    if (score < 40) return "from-red-500 to-orange-500";
+    if (score < 70) return "from-yellow-500 to-amber-500";
+    return "from-indigo-500 to-purple-600";
+  };
+
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    x.set(e.clientX - rect.left);
+    y.set(e.clientY - rect.top);
+  };
+
+  const spotlight = useTransform(
+    [x, y],
+    ([latestX, latestY]) =>
+      `radial-gradient(300px at ${latestX}px ${latestY}px, rgba(99,102,241,0.15), transparent 80%)`
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      onMouseMove={handleMouseMove}
+      className="relative"
+    >
+      <motion.div
+        style={{ background: spotlight }}
+        className="absolute inset-0 rounded-3xl pointer-events-none"
+      />
+
+      <Card className="relative overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-2xl shadow-2xl hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)] transition-all duration-500">
+        <CardContent className="p-7 space-y-7">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-xl font-semibold tracking-tight">
+                        Readiness Score
+                    </h2>
+                    <p className="text-sm text-gray-400">
+                        Level: <span className="font-medium text-gray-600">Intermediate</span>
+                    </p>
+                </div>
+
+            <div className="relative h-16 w-16">
+              <svg className="rotate-[-90deg]" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke="rgba(255,255,255,0.1)"
+                  strokeWidth="8"
+                  fill="none"
+                />
+
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  stroke="url(#gradient)"
+                  strokeWidth="8"
+                  fill="none"
+                  strokeDasharray="283"
+                  strokeDashoffset={283 - (283 * score) / 100}
+                  strokeLinecap="round"
+                  initial={{ strokeDashoffset: 283 }}
+                  animate={{ strokeDashoffset: 283 - (283 * score) / 100 }}
+                  transition={{ duration: 1, ease: "easeOut" }}
+                />
+
+                <defs>
+                  <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#6366f1" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
+                {score}%
+              </div>
+            </div>
+          </div>
+
+          {/* Insights */}
+          <div className="grid grid-cols-3 gap-3 text-center">
+            <div className="rounded-xl bg-white/5 p-3">
+              <p className="text-xs text-gray-400">Speed</p>
+              <p className="font-semibold">80%</p>
+            </div>
+            <div className="rounded-xl bg-white/5 p-3">
+              <p className="text-xs text-gray-400">Accuracy</p>
+              <p className="font-semibold">68%</p>
+            </div>
+            <div className="rounded-xl bg-white/5 p-3">
+              <p className="text-xs text-gray-400">Consistency</p>
+              <p className="font-semibold">70%</p>
+            </div>
+          </div>
+
+          {/* CTA */}
+          <Button className={`group w-full rounded-xl bg-gradient-to-r ${getColor()} text-white font-medium shadow-lg hover:scale-[1.03] transition-all duration-300`}>
+            <span>Start New Assessment</span>
+            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </Button>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+};
