@@ -1,24 +1,21 @@
 "use client";
 import { AssessmentIntro } from "@/components/dashboard/assessment/Intro";
-import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
-
-export default function AssessmentIntroPage() {
+export default function Page() {
+  const { user, isHydrated } = useAuth();
   const router = useRouter();
-  const { user, logout } = useAuth();
 
-  if (user) {
-    console.log(user.fields.firstname);
-  }
-  if (!user) router.push("/");
-  return (
-    <div>
-      <main className="min-h-screen bg-white text-gray-900 overflow-hidden">
-        <div className="mt-[-12]">
-          <AssessmentIntro />
-        </div>
-      </main>
-    </div>
-  );
+  useEffect(() => {
+    if (isHydrated && !user) router.push("/");
+  }, [isHydrated, user]);
+
+  if (!isHydrated) return <div>Loading...</div>;
+
+  const track = user.fields.jobInterest!;
+  const level = user.fields.skillLevel!;
+
+  return <AssessmentIntro track={track} level={level} />;
 }

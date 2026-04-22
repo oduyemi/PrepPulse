@@ -1,25 +1,50 @@
 "use client";
 import { createContext, useContext, useEffect, useState } from "react";
 
-type User = {
+export type UserFields = {
+  firstName: string;
+  surname: string;
+  email: string;
+  jobInterest: "fullstack" | "hr" | "pm";
+  skillLevel: "entry" | "intermediate" | "senior";
+};
+
+export type User = {
   id: string;
-  fields: any;
+  fields: Partial<UserFields>;
 };
 
 type AuthContextType = {
   user: User | null;
+  isHydrated: boolean;
   login: (user: User) => void;
   logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: any) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored) setUser(JSON.parse(stored));
+    try {
+      const stored = localStorage.getItem("user");
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+
+        if (parsed?.id && parsed?.fields?.email) {
+          setUser(parsed);
+        } else {
+          localStorage.removeItem("user");
+        }
+      }
+    } catch {
+      localStorage.removeItem("user");
+    } finally {
+      setIsHydrated(true);
+    }
   }, []);
 
   const login = (user: User) => {
@@ -33,12 +58,14 @@ export const AuthProvider = ({ children }: any) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, isHydrated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext)!;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  return ctx;
 };

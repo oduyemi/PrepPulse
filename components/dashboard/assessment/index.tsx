@@ -3,30 +3,163 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/app/context/AuthContext";
+import { useRouter } from "next/navigation";
+
+type Question = {
+  id: string;
+  question: string;
+  options: string[];
+};
+
+const TOTAL_TIME = 10 * 60;
 
 export const AssessmentWa = () => {
-  const questions = [
-    {
-      question: "What does useEffect do in React?",
-      options: [
-        "Handles side effects",
-        "Manages routing",
-        "Stores global state",
-        "Compiles JSX",
-      ],
-    },
-  ];
+  const { user, isHydrated } = useAuth();
+  const router = useRouter();
 
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [time, setTime] = useState(8 * 60 + 21);
+  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [time, setTime] = useState(TOTAL_TIME);
+  const [fetched, setFetched] = useState(false);
+
+  const track = user?.fields?.jobInterest;
+  const level = user?.fields?.skillLevel;
+
+  /* =========================
+     REDIRECT (SAFE)
+  ========================= */
+  useEffect(() => {
+    if (!isHydrated) return;
+
+    if (!user) {
+      router.replace("/");
+      return;
+    }
+
+    if (!user.fields?.jobInterest || !user.fields?.skillLevel) {
+      router.replace("/track");
+    }
+  }, [isHydrated, user, router]);
+
+  /* =========================
+     RESTORE STATE
+  ========================= */
+  useEffect(() => {
+    const saved = localStorage.getItem("assessment");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setAnswers(parsed.answers || {});
+      setCurrent(parsed.current || 0);
+      setTime(parsed.time || TOTAL_TIME);
+    }
+  }, []);
 
   useEffect(() => {
+    localStorage.setItem(
+      "assessment",
+      JSON.stringify({ answers, current, time })
+    );
+  }, [answers, current, time]);
+
+  /* =========================
+     FETCH QUESTIONS
+  ========================= */
+  useEffect(() => {
+    if (!isHydrated || fetched) return;
+    if (!track || !level) return;
+
+    const fetchQuestions = async () => {
+      setFetched(true);
+
+      try {
+        const res = await fetch(
+          `/api/test/generate?track=${track}&level=${level}`
+        );
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        setQuestions(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchQuestions();
+  }, [isHydrated, fetched, track, level]);
+
+  /* =========================
+     TIMER
+  ========================= */
+  useEffect(() => {
+    if (loading) return;
+
     const interval = setInterval(() => {
       setTime((t) => (t > 0 ? t - 1 : 0));
     }, 1000);
+
     return () => clearInterval(interval);
-  }, []);
+  }, [loading]);
+
+  /* =========================
+     AUTO SUBMIT
+  ========================= */
+  useEffect(() => {
+    if (time === 0 && questions.length > 0) {
+      handleSubmit();
+    }
+  }, [time, questions]);
+
+  /* =========================
+     UI GUARDS (CRITICAL)
+  ========================= */
+
+  // ⛔ WAIT for hydration FIRST
+  if (!isHydrated) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Loading session...
+      </div>
+    );
+  }
+
+  // ⛔ THEN validate user
+  if (!user || !track || !level) {
+    return null; // redirect will handle this
+  }
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Preparing assessment...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-screen flex items-center justify-center text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  if (!questions.length) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        No questions available.
+      </div>
+    );
+  }
+
+  const q = questions[current];
+  const selected = answers[current];
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -36,103 +169,85 @@ export const AssessmentWa = () => {
       .padStart(2, "0")}`;
   };
 
-  const q = questions[current];
+  const handleSelect = (opt: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [current]: opt,
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (!user.fields?.email) return;
+
+    try {
+      const res = await fetch("/api/test/submit", {
+        method: "POST",
+        body: JSON.stringify({
+          answers,
+          questions,
+          duration: TOTAL_TIME - time,
+          email: user.fields.email,
+          track,
+          skillLevel: level,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      localStorage.removeItem("assessment");
+      router.push(`/assessment/test/result`);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-
-      {/* 🔒 Container */}
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
 
-        {/* 🔝 Header */}
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Question {current + 1} of {questions.length}
-          </div>
-
-          {/* Timer (enhanced) */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 text-sm font-medium text-gray-800">
-            <Clock className="h-4 w-4" />
+        <div className="flex justify-between">
+          <span>Q {current + 1}/{questions.length}</span>
+          <span className="flex gap-2">
+            <Clock size={16} />
             {formatTime(time)}
-          </div>
+          </span>
         </div>
 
-        {/* 📊 Progress bar */}
-        <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-indigo-600 transition-all"
-            style={{
-              width: `${((current + 1) / questions.length) * 100}%`,
-            }}
-          />
+        <motion.h2 key={current}>{q.question}</motion.h2>
+
+        <div className="space-y-2">
+          {q.options.map((opt, i) => (
+            <button
+              key={i}
+              onClick={() => handleSelect(opt)}
+              className={`w-full p-3 border rounded ${
+                selected === opt ? "bg-indigo-100 border-indigo-500" : ""
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
         </div>
 
-        {/* ❓ Question */}
-        <motion.h2
-          key={current}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-xl font-semibold text-gray-900"
-        >
-          {q.question}
-        </motion.h2>
-
-        {/* ✅ Options */}
-        <div className="space-y-3">
-          {q.options.map((opt, i) => {
-            const isSelected = selected === opt;
-
-            return (
-              <button
-                key={i}
-                onClick={() => setSelected(opt)}
-                className={`
-                  w-full text-left p-4 rounded-xl border transition-all
-                  ${isSelected
-                    ? "border-indigo-600 bg-indigo-50"
-                    : "border-gray-200 hover:bg-gray-50"}
-                `}
-              >
-                <span className="text-sm text-gray-800">{opt}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 🔽 Navigation */}
-        <div className="flex items-center justify-between pt-4">
-
+        <div className="flex justify-between">
           <Button
-            variant="outline"
             disabled={current === 0}
-            onClick={() => {
-              setCurrent((c) => Math.max(0, c - 1));
-              setSelected(null);
-            }}
+            onClick={() => setCurrent((c) => c - 1)}
           >
-            Previous
+            Prev
           </Button>
 
-          <div className="flex gap-2">
-            {current < questions.length - 1 ? (
-              <Button
-                disabled={!selected}
-                onClick={() => {
-                  setCurrent((c) => c + 1);
-                  setSelected(null);
-                }}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                disabled={!selected}
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
-              >
-                Submit
-              </Button>
-            )}
-          </div>
+          {current < questions.length - 1 ? (
+            <Button
+              disabled={!selected}
+              onClick={() => setCurrent((c) => c + 1)}
+            >
+              Next
+            </Button>
+          ) : (
+            <Button onClick={handleSubmit}>Submit</Button>
+          )}
         </div>
       </div>
     </div>

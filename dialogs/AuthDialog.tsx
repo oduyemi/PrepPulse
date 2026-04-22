@@ -84,12 +84,24 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
     setForm((prev: any) => ({ ...prev, [name]: value }));
   };
 
+  const normalizeUser = (data: any) => ({
+    id: data.id,
+    fields: {
+      firstName: data.fields.firstname,
+      surname: data.fields.surname,
+      email: data.fields.email,
+      jobInterest: data.fields.track?.toLowerCase(),
+      skillLevel: data.fields.level?.toLowerCase(),
+    },
+  });
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
   
     try {
       if (mode === "register") {
+        // ✅ REGISTER
         await fetch("/api/register", {
           method: "POST",
           headers: {
@@ -98,7 +110,7 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
           body: JSON.stringify(form),
         });
   
-        // ✅ Auto login after register
+        // ✅ AUTO LOGIN
         const res = await fetch("/api/login", {
           method: "POST",
           headers: {
@@ -117,19 +129,19 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
           return;
         }
   
-        login(data);
+        // ✅ FIX: normalize here too
+        login(normalizeUser(data));
+  
         setForm({});
         setOpen(false);
         router.push("/track");
         return;
       }
   
-      // ✅ LOGIN (clean version)
+      // ✅ LOGIN
       const res = await fetch("/api/login", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
           password: form.password,
@@ -143,10 +155,12 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
         return;
       }
   
-      login(data);
+      login(normalizeUser(data));
+  
       setForm({});
       setOpen(false);
       router.push("/track");
+  
     } finally {
       setLoading(false);
     }
@@ -236,13 +250,13 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
                       <SelectValue placeholder=" Select your track" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Fullstack">
+                      <SelectItem value="fullstack">
                         Fullstack Development
                       </SelectItem>
-                      <SelectItem value="HR">
+                      <SelectItem value="hr">
                         Human Resources
                       </SelectItem>
-                      <SelectItem value="Project">
+                      <SelectItem value="pm">
                         Project Management
                       </SelectItem>
                     </SelectContent>
@@ -259,11 +273,11 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
                       <SelectValue placeholder="Select your level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Entry">Entry</SelectItem>
-                      <SelectItem value="Intermediate">
+                      <SelectItem value="entry">Entry</SelectItem>
+                      <SelectItem value="intermediate">
                         Intermediate
                       </SelectItem>
-                      <SelectItem value="Senior">Senior</SelectItem>
+                      <SelectItem value="senior">Senior</SelectItem>
                     </SelectContent>
                   </Select>
                 </Field>

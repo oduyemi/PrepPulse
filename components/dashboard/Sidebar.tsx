@@ -1,8 +1,17 @@
 "use client";
-import { X, LayoutDashboard, BarChart3, Settings, LogOut } from "lucide-react";
+import {
+  X,
+  LayoutDashboard,
+  BarChart3,
+  Settings,
+  LogOut,
+  BookOpen,
+} from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export const Sidebar = ({
   open,
@@ -11,12 +20,35 @@ export const Sidebar = ({
   open: boolean;
   setOpen: (val: boolean) => void;
 }) => {
+
+  const pathname = usePathname();
+
   const links = [
-    { icon: LayoutDashboard, label: "Overview", active: true }, // should link to /portal
-    { icon: BarChart3, label: "Assessment" }, // /portal/assessment
-    { icon: BarChart3, label: "Progress" }, // /portal/analytics
-    { icon: BarChart3, label: "Courses" }, // /courses
-    { icon: Settings, label: "Profile" }, // /protal/settings
+    {
+      icon: LayoutDashboard,
+      label: "Overview",
+      href: "/portal",
+    },
+    {
+      icon: BarChart3,
+      label: "Assessment",
+      href: "/assessment",
+    },
+    {
+      icon: BarChart3,
+      label: "Progress",
+      href: "/portal/analytics",
+    },
+    {
+      icon: BookOpen,
+      label: "Courses",
+      href: "/courses",
+    },
+    {
+      icon: Settings,
+      label: "Profile",
+      href: "/portal/settings",
+    },
   ];
 
   return (
@@ -37,10 +69,9 @@ export const Sidebar = ({
           open ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
-        {/* 🔒 Inner layout (alignment system) */}
         <div className="flex flex-col h-full px-4 py-5">
 
-          {/* Header */}
+          {/* HEADER */}
           <div className="flex items-center justify-between h-10">
             <h2 className="text-base font-semibold tracking-tight text-gray-900">
               PrepPulse
@@ -54,33 +85,37 @@ export const Sidebar = ({
             </button>
           </div>
 
-          {/* Divider */}
           <div className="mt-5 mb-4 border-t border-gray-100" />
 
-          {/* Nav */}
+          {/* NAV */}
           <nav className="flex-1 space-y-1">
-            {links.map((link, i) => (
-              <button
-                key={i}
-                className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
-                  link.active
-                    ? "bg-indigo-50 text-indigo-600"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                )}
-              >
-                <link.icon
-                  className={cn(
-                    "h-4 w-4",
-                    link.active ? "text-indigo-600" : "text-gray-400"
-                  )}
-                />
-                {link.label}
-              </button>
-            ))}
+            {links.map((link) => {
+              const isActive = pathname === link.href;
+
+              return (
+                <Link key={link.href} href={link.href} onClick={() => setOpen(false)}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all",
+                      isActive
+                        ? "bg-indigo-50 text-indigo-600"
+                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    )}
+                  >
+                    <link.icon
+                      className={cn(
+                        "h-4 w-4",
+                        isActive ? "text-indigo-600" : "text-gray-400"
+                      )}
+                    />
+                    {link.label}
+                  </div>
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Footer */}
+          {/* FOOTER */}
           <div className="pt-4 border-t border-gray-100">
             <Link href="/logout">
               <Button
@@ -92,6 +127,7 @@ export const Sidebar = ({
               </Button>
             </Link>
           </div>
+
         </div>
       </aside>
     </>

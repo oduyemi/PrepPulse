@@ -1,24 +1,28 @@
 "use client";
 import { useAuth } from "@/app/context/AuthContext";
-import { AssessmentWa } from "@/components/dashboard/assessment/index";
+import { AssessmentWa } from "@/components/dashboard/assessment";
 import { useRouter } from "next/navigation";
-
+import { useEffect } from "react";
 
 export default function Assessments() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, isHydrated } = useAuth();
 
-  if (user) {
-    console.log(user.fields.firstname);
+  useEffect(() => {
+    if (isHydrated && !user) {
+      router.push("/");
+    }
+  }, [isHydrated, user, router]);
+
+  if (!isHydrated) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
-  if (!user) router.push("/");
-  return (
-    <div>
-      <main className="min-h-screen bg-white text-gray-900 overflow-hidden">
-        <div className="mt-[-12]">
-          <AssessmentWa />
-        </div>
-      </main>
-    </div>
-  );
+
+  if (!user) return null;
+
+  return <AssessmentWa />;
 }

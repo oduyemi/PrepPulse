@@ -1,10 +1,10 @@
-import { airtableFetch } from "@/lib/airtable";
+import { airtableFetch, TABLES } from "@/lib/airtable";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const res = await airtableFetch("", {
+  const res = await airtableFetch(TABLES.USERS, "", {
     method: "POST",
     body: JSON.stringify({
       records: [
@@ -23,12 +23,10 @@ export async function POST(req: Request) {
   });
 
   const data = await res.json();
-  console.log("REGISTER RESPONSE:", JSON.stringify(data, null, 2));
+
   if (!res.ok || data.error) {
     return NextResponse.json(
-      {
-        error: data.error?.message || "Failed to create user",
-      },
+      { error: data.error?.message || "Failed to create user" },
       { status: 500 }
     );
   }

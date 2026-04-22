@@ -6,15 +6,27 @@ import { BreakdownCard } from "@/components/results/Performance";
 import { ReadinessCard } from "@/components/results/Readiness";
 import { ScoreCard } from "@/components/results/Score";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Results() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, isHydrated } = useAuth();
 
-  if (user) {
-    console.log(user.fields.firstname);
+  useEffect(() => {
+    if (isHydrated && !user) {
+      router.push("/");
+    }
+  }, [isHydrated, user, router]);
+
+  if (!isHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-sm text-gray-500">Loading session...</p>
+      </div>
+    );
   }
-  if (!user) router.push("/");
+
+  if (!user) return null;
   const score = 7;
   const total = 10;
   const percentage = 70;

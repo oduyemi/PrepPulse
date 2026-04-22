@@ -4,8 +4,39 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { motion, useMotionValue, useTransform } from "framer-motion";
 
-export const ReadinessCard = () => {
-  const score = 72;
+type Props = {
+  score: number;
+  skillLevel: "entry" | "intermediate" | "senior";
+  stats: {
+    speed: number;
+    accuracy: number;
+    consistency: number;
+  };
+};
+
+export const ReadinessCard = ({
+  score = 72,
+  skillLevel = "intermediate",
+  stats = { speed: 80, accuracy: 68, consistency: 70 },
+}: Props) => {
+
+  /* =========================
+     READINESS LOGIC
+  ========================= */
+  const getReadiness = () => {
+    if (score < 40) return "Beginner";
+    if (score < 70) return "Developing";
+    return "Interview Ready";
+  };
+
+  const formatSkillLevel = () => {
+    const map = {
+      entry: "Entry Level",
+      intermediate: "Intermediate",
+      senior: "Senior",
+    };
+    return map[skillLevel];
+  };
 
   const getColor = () => {
     if (score < 40) return "from-red-500 to-orange-500";
@@ -13,6 +44,9 @@ export const ReadinessCard = () => {
     return "from-indigo-500 to-purple-600";
   };
 
+  /* =========================
+     SPOTLIGHT EFFECT
+  ========================= */
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
@@ -36,7 +70,6 @@ export const ReadinessCard = () => {
       onMouseMove={handleMouseMove}
       className="relative"
     >
-      {/* Spotlight */}
       <motion.div
         style={{ background: spotlight }}
         className="absolute inset-0 rounded-3xl pointer-events-none"
@@ -44,22 +77,30 @@ export const ReadinessCard = () => {
 
       <Card className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
         <CardContent className="p-6 space-y-6">
-
-          {/* 🔒 Header (aligned properly) */}
           <div className="flex items-center justify-between">
+
             <div className="space-y-1">
               <h2 className="text-lg font-semibold text-gray-900 tracking-tight">
                 Readiness Score
               </h2>
-              <p className="text-sm text-gray-500">
-                Level:{" "}
-                <span className="font-medium text-gray-700">
-                  Intermediate
-                </span>
-              </p>
+
+              <div className="text-sm text-gray-500 space-y-0.5">
+                <p>
+                  Skill Level:{" "}
+                  <span className="font-medium text-gray-800">
+                    {formatSkillLevel()}
+                  </span>
+                </p>
+
+                <p>
+                  Readiness:{" "}
+                  <span className="font-medium text-gray-900">
+                    {getReadiness()}
+                  </span>
+                </p>
+              </div>
             </div>
 
-            {/* Score circle */}
             <div className="relative h-16 w-16 shrink-0">
               <svg className="rotate-[-90deg]" viewBox="0 0 100 100">
                 <circle
@@ -85,7 +126,7 @@ export const ReadinessCard = () => {
                   animate={{
                     strokeDashoffset: 283 - (283 * score) / 100,
                   }}
-                  transition={{ duration: 1, ease: "easeOut" }}
+                  transition={{ duration: 1 }}
                 />
 
                 <defs>
@@ -102,12 +143,12 @@ export const ReadinessCard = () => {
             </div>
           </div>
 
-          {/* 📊 Stats (visually grouped) */}
+          {/* STATS */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: "Speed", value: "80%" },
-              { label: "Accuracy", value: "68%" },
-              { label: "Consistency", value: "70%" },
+              { label: "Speed", value: stats.speed },
+              { label: "Accuracy", value: stats.accuracy },
+              { label: "Consistency", value: stats.consistency },
             ].map((item, i) => (
               <div
                 key={i}
@@ -115,7 +156,7 @@ export const ReadinessCard = () => {
               >
                 <p className="text-xs text-gray-500">{item.label}</p>
                 <p className="mt-1 text-sm font-semibold text-gray-900">
-                  {item.value}
+                  {item.value}%
                 </p>
               </div>
             ))}
@@ -123,11 +164,12 @@ export const ReadinessCard = () => {
 
           {/* CTA */}
           <Button
-            className={`group w-full h-11 py-5 rounded-xl bg-gradient-to-r ${getColor()} text-white font-medium shadow-md hover:opacity-90 transition`}
+            className={`group w-full h-11 py-5 rounded-xl bg-gradient-to-r ${getColor()} text-white font-medium shadow-md hover:opacity-90`}
           >
-            <span>Start New Assessment</span>
+            Start New Assessment
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
+
         </CardContent>
       </Card>
     </motion.div>
