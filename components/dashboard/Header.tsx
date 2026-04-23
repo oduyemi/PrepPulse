@@ -4,11 +4,11 @@ import { useAuth } from "@/app/context/AuthContext";
 
 export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
   const { user } = useAuth();
-  const firstName = user?.fields?.firstname || "User";
+  const firstname = user?.fields?.firstName;
   const surname = user?.fields?.surname || "";
-  const fullName = `${firstName} ${surname}`.trim();
+  const fullName = `${firstname} ${surname}`.trim();
 
-  const initial = firstName.charAt(0).toUpperCase();
+  const initial = firstname.charAt(0).toUpperCase();
   const roleMap: Record<string, string> = {
     fullstack: "Fullstack Candidate",
     hr: "HR Candidate",
@@ -30,9 +30,10 @@ export const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
             <Menu className="h-5 w-5 text-gray-700" />
           </button>
           <div className="flex flex-col justify-center min-w-0">
-            <h1 className="text-sm sm:text-base font-medium text-gray-700 leading-tight truncate">
-              Welcome back, {firstName} <span>👋</span>
-            </h1>
+            <div className="mt-2"></div>
+            <h6 className="mt-6 text-sm sm:text-base font-medium text-gray-700 leading-tight truncate">
+              Welcome back, {firstname} <span>👋</span>
+            </h6>
             <p className="text-xs text-gray-500 leading-tight mt-0.5 truncate">
               Your Interview Readiness Pulse
             </p>

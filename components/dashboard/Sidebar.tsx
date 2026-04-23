@@ -42,7 +42,7 @@ export const Sidebar = ({
     {
       icon: BookOpen,
       label: "Courses",
-      href: "/courses",
+      href: "/portal/courses",
     },
     {
       icon: Settings,

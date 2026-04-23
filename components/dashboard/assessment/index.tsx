@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
 
@@ -17,7 +17,6 @@ const TOTAL_TIME = 10 * 60;
 export const AssessmentWa = () => {
   const { user, isHydrated } = useAuth();
   const router = useRouter();
-
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +48,8 @@ export const AssessmentWa = () => {
      RESTORE STATE
   ========================= */
   useEffect(() => {
+    if (!isHydrated) return;
+  
     const saved = localStorage.getItem("assessment");
     if (saved) {
       const parsed = JSON.parse(saved);
@@ -56,7 +57,7 @@ export const AssessmentWa = () => {
       setCurrent(parsed.current || 0);
       setTime(parsed.time || TOTAL_TIME);
     }
-  }, []);
+  }, [isHydrated]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -160,6 +161,7 @@ export const AssessmentWa = () => {
 
   const q = questions[current];
   const selected = answers[current];
+  const progress = ((current + 1) / questions.length) * 100;
 
   const formatTime = (s: number) => {
     const m = Math.floor(s / 60);
@@ -203,43 +205,86 @@ export const AssessmentWa = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-4xl mx-auto py-10 px-6">
 
-        <div className="flex justify-between">
-          <span>Q {current + 1}/{questions.length}</span>
-          <span className="flex gap-2">
+        {/* HEADER */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-semibold">Assessment</h1>
+            <p className="text-sm text-gray-500">
+              {track?.toUpperCase()} · {level}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-sm">
             <Clock size={16} />
-            {formatTime(time)}
-          </span>
+            <span className="font-medium">{formatTime(time)}</span>
+          </div>
         </div>
 
-        <motion.h2 key={current}>{q.question}</motion.h2>
+        {/* PROGRESS */}
+        <div className="mb-6">
+          <div className="flex justify-between text-sm text-gray-500 mb-1">
+            <span>
+              Question {current + 1} of {questions.length}
+            </span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+          <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-indigo-600"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
 
-        <div className="space-y-2">
-          {q.options.map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => handleSelect(opt)}
-              className={`w-full p-3 border rounded ${
-                selected === opt ? "bg-indigo-100 border-indigo-500" : ""
-              }`}
+        {/* CARD */}
+        <div className="bg-white rounded-2xl shadow-md p-8">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={current}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
             >
-              {opt}
-            </button>
-          ))}
+              <h2 className="text-lg font-medium mb-6">{q.question}</h2>
+
+              <div className="space-y-3">
+                {q.options.map((opt: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSelect(opt)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border transition
+                      ${
+                        selected === opt
+                          ? "border-indigo-600 bg-indigo-50"
+                          : "hover:border-gray-400"
+                      }`}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        <div className="flex justify-between">
+        {/* FOOTER NAV */}
+        <div className="mt-6 flex justify-between">
           <Button
+            variant="outline"
             disabled={current === 0}
             onClick={() => setCurrent((c) => c - 1)}
           >
-            Prev
+            Previous
           </Button>
 
           {current < questions.length - 1 ? (
             <Button
+            className="bg-indigo-600"
               disabled={!selected}
               onClick={() => setCurrent((c) => c + 1)}
             >

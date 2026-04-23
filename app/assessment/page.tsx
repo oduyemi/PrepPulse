@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 import { AssessmentIntro } from "@/components/dashboard/assessment/Intro";
 import { useAuth } from "../context/AuthContext";

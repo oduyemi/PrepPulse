@@ -7,6 +7,7 @@ import { motion, useMotionValue, useTransform } from "framer-motion";
 type Props = {
   score: number;
   skillLevel: "entry" | "intermediate" | "senior";
+  readinessLevel?: string;
   stats: {
     speed: number;
     accuracy: number;
@@ -15,19 +16,16 @@ type Props = {
 };
 
 export const ReadinessCard = ({
-  score = 72,
+  score = 0,
   skillLevel = "intermediate",
-  stats = { speed: 80, accuracy: 68, consistency: 70 },
+  readinessLevel,
+  stats,
 }: Props) => {
 
-  /* =========================
-     READINESS LOGIC
-  ========================= */
-  const getReadiness = () => {
-    if (score < 40) return "Beginner";
-    if (score < 70) return "Developing";
-    return "Interview Ready";
-  };
+  const safeScore = Math.min(100, Math.max(0, Number(score) || 0));
+
+  // ✅ FIX: TRUST AIRTABLE FIRST
+  const readiness = readinessLevel?.trim() || "Unknown";
 
   const formatSkillLevel = () => {
     const map = {
@@ -38,15 +36,12 @@ export const ReadinessCard = ({
     return map[skillLevel];
   };
 
-  const getColor = () => {
-    if (score < 40) return "from-red-500 to-orange-500";
-    if (score < 70) return "from-yellow-500 to-amber-500";
+  const getColor = (value: number) => {
+    if (value < 40) return "from-red-500 to-orange-500";
+    if (value < 70) return "from-yellow-500 to-amber-500";
     return "from-indigo-500 to-purple-600";
   };
 
-  /* =========================
-     SPOTLIGHT EFFECT
-  ========================= */
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
@@ -58,15 +53,17 @@ export const ReadinessCard = ({
 
   const spotlight = useTransform(
     [x, y],
-    ([latestX, latestY]) =>
-      `radial-gradient(280px at ${latestX}px ${latestY}px, rgba(99,102,241,0.12), transparent 80%)`
+    ([lx, ly]) =>
+      `radial-gradient(280px at ${lx}px ${ly}px, rgba(99,102,241,0.12), transparent 80%)`
   );
+
+  const circumference = 283;
+  const strokeOffset = circumference - (circumference * safeScore) / 100;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
       onMouseMove={handleMouseMove}
       className="relative"
     >
@@ -75,16 +72,17 @@ export const ReadinessCard = ({
         className="absolute inset-0 rounded-3xl pointer-events-none"
       />
 
-      <Card className="relative overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-xl">
+      <Card className="relative overflow-hidden rounded-3xl border bg-white shadow-xl">
         <CardContent className="p-6 space-y-6">
+
           <div className="flex items-center justify-between">
 
             <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-gray-900 tracking-tight">
+              <h2 className="text-lg font-semibold">
                 Readiness Score
               </h2>
 
-              <div className="text-sm text-gray-500 space-y-0.5">
+              <div className="text-sm text-gray-500">
                 <p>
                   Skill Level:{" "}
                   <span className="font-medium text-gray-800">
@@ -95,22 +93,16 @@ export const ReadinessCard = ({
                 <p>
                   Readiness:{" "}
                   <span className="font-medium text-gray-900">
-                    {getReadiness()}
+                    {readiness}
                   </span>
                 </p>
               </div>
             </div>
 
-            <div className="relative h-16 w-16 shrink-0">
+            {/* ring */}
+            <div className="relative h-16 w-16">
               <svg className="rotate-[-90deg]" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  stroke="#e5e7eb"
-                  strokeWidth="8"
-                  fill="none"
-                />
+                <circle cx="50" cy="50" r="45" stroke="#e5e7eb" strokeWidth="8" fill="none" />
 
                 <motion.circle
                   cx="50"
@@ -119,55 +111,41 @@ export const ReadinessCard = ({
                   stroke="url(#gradient)"
                   strokeWidth="8"
                   fill="none"
-                  strokeDasharray="283"
-                  strokeDashoffset={283 - (283 * score) / 100}
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeOffset}
                   strokeLinecap="round"
-                  initial={{ strokeDashoffset: 283 }}
-                  animate={{
-                    strokeDashoffset: 283 - (283 * score) / 100,
-                  }}
-                  transition={{ duration: 1 }}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: strokeOffset }}
                 />
 
                 <defs>
-                  <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="1">
+                  <linearGradient id="gradient">
                     <stop offset="0%" stopColor="#6366f1" />
                     <stop offset="100%" stopColor="#a855f7" />
                   </linearGradient>
                 </defs>
               </svg>
 
-              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-gray-900">
-                {score}%
+              <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
+                {safeScore}%
               </div>
             </div>
+
           </div>
 
-          {/* STATS */}
+          {/* stats */}
           <div className="grid grid-cols-3 gap-3">
-            {[
-              { label: "Speed", value: stats.speed },
-              { label: "Accuracy", value: stats.accuracy },
-              { label: "Consistency", value: stats.consistency },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-center"
-              >
-                <p className="text-xs text-gray-500">{item.label}</p>
-                <p className="mt-1 text-sm font-semibold text-gray-900">
-                  {item.value}%
-                </p>
+            {Object.entries(stats || {}).map(([key, value], i) => (
+              <div key={i} className="p-3 bg-gray-50 rounded-xl text-center">
+                <p className="text-xs text-gray-500">{key}</p>
+                <p className="text-sm font-semibold">{Number(value) || 0}%</p>
               </div>
             ))}
           </div>
 
-          {/* CTA */}
-          <Button
-            className={`group w-full h-11 py-5 rounded-xl bg-gradient-to-r ${getColor()} text-white font-medium shadow-md hover:opacity-90`}
-          >
+          <Button className={`w-full bg-gradient-to-r ${getColor(safeScore)} text-white`}>
             Start New Assessment
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
 
         </CardContent>

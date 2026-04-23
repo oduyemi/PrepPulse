@@ -1,5 +1,4 @@
 "use client";
-
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -80,9 +79,11 @@ export const TrackIntro = ({ track = "fullstack" }: { track?: TrackKey }) => {
             ))}
           </ul>
 
-          <Button className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700">
-            Start Learning Path <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <Link href="/portal/courses">
+            <Button className="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700">
+              Start Learning Path <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
 
         </CardContent>
       </Card>

@@ -2,7 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
-
+import Link from "next/link";
 
 
 export function NextStepsCard({ percentage }: { percentage: number }) {
@@ -24,13 +24,16 @@ export function NextStepsCard({ percentage }: { percentage: number }) {
         <p className="text-sm text-indigo-100">{recommendation}</p>
 
         <div className="flex gap-3 flex-wrap">
-          <Button className="bg-white text-indigo-600 hover:bg-gray-100 rounded-xl">
-            Go to Dashboard
-          </Button>
-
-          <Button variant="secondary" className="rounded-xl">
-            Retry Assessment <RotateCcw className="ml-2 h-4 w-4" />
-          </Button>
+          <Link href="/portal">
+            <Button className="bg-white text-indigo-600 hover:bg-gray-100 rounded-xl">
+              Go to Dashboard
+            </Button>
+          </Link>
+          <Link href="/assessment/test">
+            <Button variant="secondary" className="rounded-xl">
+              Retry Assessment <RotateCcw className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </CardContent>
     </Card>

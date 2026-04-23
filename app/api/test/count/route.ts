@@ -4,16 +4,23 @@ import { airtableFetch, TABLES } from "@/lib/airtable";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const email = searchParams.get("email");
+
   if (!email) {
     return NextResponse.json({ error: "Missing email" }, { status: 400 });
   }
 
-  const formula = `{email}="${email}"`;
+  const safeEmail = email.trim().toLowerCase();
+
+  const formula = `LOWER({email})="${safeEmail}"`;
+
   const res = await airtableFetch(
     TABLES.TESTS,
-    `?filterByFormula=${encodeURIComponent(formula)}&sort[0][field]=completed_at&sort[0][direction]=desc&maxRecords=1`
+    `?filterByFormula=${encodeURIComponent(formula)}&pageSize=100`
   );
 
   const data = await res.json();
-  return NextResponse.json(data.records?.[0] || null);
+
+  const count = Array.isArray(data.records) ? data.records.length : 0;
+
+  return NextResponse.json({ count });
 }

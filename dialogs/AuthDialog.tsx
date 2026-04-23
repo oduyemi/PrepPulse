@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
-import { airtableFetch } from "@/lib/airtable";
 
 
 const Header = ({ title, subtitle }: { title: string; subtitle: string }) => {
@@ -94,23 +93,38 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
       skillLevel: data.fields.level?.toLowerCase(),
     },
   });
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
   
     try {
       if (mode === "register") {
-        // ✅ REGISTER
-        await fetch("/api/register", {
+          const payload = {
+          firstname: form.firstName,
+          surname: form.surname,
+          email: form.email,
+          password: form.password,
+          track: form.jobInterest,
+          level: form.skillLevel,
+        };
+  
+        const registerRes = await fetch("/api/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify(payload),
         });
   
-        // ✅ AUTO LOGIN
+        const registerData = await registerRes.json();
+  
+        if (!registerRes.ok) {
+          alert(registerData.error || "Registration failed");
+          return;
+        }
+  
+        // AUTO LOGIN
         const res = await fetch("/api/login", {
           method: "POST",
           headers: {
@@ -129,7 +143,6 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
           return;
         }
   
-        // ✅ FIX: normalize here too
         login(normalizeUser(data));
   
         setForm({});
@@ -138,7 +151,7 @@ export const AuthDialog = ({ children }: { children: React.ReactNode }) => {
         return;
       }
   
-      // ✅ LOGIN
+      // LOGIN
       const res = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
